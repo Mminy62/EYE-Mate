@@ -12,14 +12,13 @@ struct ActionAreaView: View {
     
     var body: some View {
         VStack {
-            AsyncImageView(url: URL(string: coordinator.placeInfo[Key.image.rawValue] ?? ""))
 
             Button(action: {
                 showNaverMap(lat: Double(coordinator.placeInfo[Key.lat.rawValue] ?? "0.0")!,lng: Double(coordinator.placeInfo[Key.lng.rawValue] ?? "0.0")!, name: coordinator.placeInfo[Key.name.rawValue] ?? "도착")
             }) {
                 Label("길찾기", systemImage: "location")
             }
-            .buttonStyle(MapButtonStyle())
+            .buttonStyle(MapButtonStyle(cornerRadiusValue: 10))
         }
     }
     

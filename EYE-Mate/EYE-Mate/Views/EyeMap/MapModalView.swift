@@ -23,12 +23,10 @@ struct MapModalView: View {
             .overlay(
                 HStack {
                     InfoView(coordinator: coordinator)
-                    Spacer()
-                    ActionAreaView(coordinator: coordinator)
                 }
-                .padding(15)
+                .padding(10)
             )
-            .frame(maxWidth: .infinity, maxHeight: 160)
+            .frame(maxWidth: .infinity, maxHeight: 140)
             .padding(.horizontal, 20)
     }
 }
