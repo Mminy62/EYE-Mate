@@ -14,7 +14,7 @@ struct PhoneNumberView: View {
     @ObservedObject var loginViewModel = LoginViewModel.shared
     @State var presentSheet = false
     @State var countryFlag : String = "🇰🇷"
-    @State var countryPattern : String = "## #### ####"
+    @State var countryPattern : String = "### #### ####"
     @State var countryLimit : Int = 17
     @State var searchCountry: String  = ""
     @State var previousPhoneNumber: String = ""
