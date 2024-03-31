@@ -30,6 +30,13 @@ extension Bundle {
         return key
     }
     
+    var kakaoAPIKey : String? {
+        guard let file = self.path(forResource: "APIKEY", ofType: "plist"),
+              let resource = NSDictionary(contentsOfFile: file),
+              let key = resource["KakaoAPI"] as? String else { return nil }
+        return key
+    }
+    
     func decode<T : Codable>(_ file: String) -> T {
         guard let url = self.url(forResource: file, withExtension: nil) else {
             fatalError("Failed to locate \(file) in bundle.")
