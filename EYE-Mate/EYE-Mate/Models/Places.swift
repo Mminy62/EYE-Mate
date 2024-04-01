@@ -9,43 +9,28 @@ import Foundation
 
 // MARK: - Places
 struct Places: Codable {
-    let result: Result
+    let documents: [PlaceList]
 }
 
-// MARK: - Result
-struct Result: Codable {
-    let type: String
-    let place: Place
-}
-
-// MARK: - Place
-struct Place: Codable {
-    let list: [placeList]
-}
-
-// MARK: - List
-struct placeList: Codable {
-    let index, rank, id, name: String
-    let tel: String // 전화번호
-    let category: [String] // 병원,의원 안과
-    let businessStatus: BusinessStatus
-    let address, roadAddress, abbrAddress: String // 주소 - roadAddress 기준으로
-    let shortAddress: [String]
-    let reviewCount, placeReviewCount: Int
-    let thumUrls: [String] // 썸네일 이미지
-    let x, y: String
-    let distance: String
+// MARK: - Document
+struct PlaceList: Codable {
+    let addressName: String
+    let categoryGroupCode: String
+    let categoryGroupName: String
+    let categoryName: String
+    let distance, id, phone, placeName: String
+    let placeURL: String
+    let roadAddressName, x, y: String
     
-}
-
-// MARK: - BusinessStatus
-struct BusinessStatus: Codable {
-    let status: Status
-    let businessHours, breakTime, lastOrder: String
-}
-
-// MARK: - Status
-struct Status: Codable {
-    let text: String// 현재 "진료중", "진료 종료" 상태
-    let detailInfo: String // "17:30에 종료"
+    enum CodingKeys: String, CodingKey {
+        case addressName = "address_name"
+        case categoryGroupCode = "category_group_code"
+        case categoryGroupName = "category_group_name"
+        case categoryName = "category_name"
+        case distance, id, phone
+        case placeName = "place_name"
+        case placeURL = "place_url"
+        case roadAddressName = "road_address_name"
+        case x, y
+    }
 }

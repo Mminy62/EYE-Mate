@@ -10,21 +10,23 @@ import SwiftUI
 import NMapsMap
 
 enum Key: String {
-    case name = "name"
-    case status = "status"
-    case statusDetail = "statusDetail"
-    case image = "image"
-    case reviewCount = "reviewCount"
-    case placeReviewCount = "placeReviewCount"
-    case address = "address"
-    case tel = "tel"
-    case lat = "lat"
-    case lng = "lng"
+    case name = "placeName"
+    case address = "addressName"
+    case roadAddress = "roadAddressName"
+    case distance = "distance"
+    case tel = "phone"
+    case lat = "y"
+    case lng = "x"
 }
 
 enum EncodingPlace: String {
     case hospital = "%EC%95%88%EA%B3%BC"
-    case optician = "%EC%95%88%EA%B2%BD%EC%9B%90"
+    case optician = "%EC%95%88%EA%B2%BD%EC%A0%90%0D%0A"
+}
+
+enum PlaceCode: String{
+    case hospital = "HP8"
+    case optician = ""
 }
 
 enum MarkerImageName: String {
@@ -53,11 +55,13 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
     @Published var userLocation: (Double, Double) = (0.0, 0.0) // 현재 사용자 위치
     @Published var hospitals: [(Double, Double)] = []
     @Published var placeInfo: [String: String] = [:]
-    @Published var resultInfo: [placeList] = []
+    @Published var resultInfo: [PlaceList] = []
     @Published var sheetFlag = false
     @Published var selectedPicker: MapTopTapViewItem = .hospital
     @Published var total = 0
     var queryPlace: String = EncodingPlace.hospital.rawValue
+    var placeCode: String = PlaceCode.hospital.rawValue
+    
     var markerImage: String = MarkerImageName.hospital.rawValue
     var hospitalsMarkers: [NMFMarker] = []
     var locationManager: CLLocationManager?
@@ -171,20 +175,28 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
     // MARK: - 위치 주변 안과 정보 받아오기
     func fetchApiData() {
         // query = longitude, latitude 순서
-        guard let url = URL(string: "https://map.naver.com/v5/api/search?caller=pcweb&query=\(queryPlace)&type=all&searchCoord=\(String(coord.1));\(String(coord.0))&page=1&displayCount=40&isPlaceRecommendationReplace=true&lang=ko") else { return }
-        
+//        guard let url = URL(string: "https://map.naver.com/v5/api/search?caller=pcweb&query=\(queryPlace)&type=all&searchCoord=\(String(coord.1));\(String(coord.0))&page=1&displayCount=40&isPlaceRecommendationReplace=true&lang=ko") else { return }
+        // Kakao API 사용, y(latitude) = 37, x(longitude) = 127
+        // 기본 15개 제공
+        guard let url = URL(string: "https://dapi.kakao.com/v2/local/search/keyword.json?y=\(String(coord.0))&x=\(String(coord.1))&radius=20000&query=\(queryPlace)&category_group_code=\(placeCode)&sort=distance&page=1")
+        else {
+            print("Invalid URL")
+            return
+        }
+        print("fetchApiData")
+        print(String(coord.0), String(coord.1))
         // Request
-        let request = URLRequest(url: url)
-        
+        var request = URLRequest(url: url)
+        request.setValue(Bundle.main.kakaoAPIKey, forHTTPHeaderField: "Authorization")
         let session = URLSession(configuration: .default)
         // Task
         session.dataTask(with: request) { (data: Data?, response: URLResponse?, error: Error?) in
             guard error == nil else {
-                print("Error occur: error calling GET - \\(String(describing: error))")
+                print("Error occur: error calling GET - \(String(describing: error))")
                 return
             }
             guard let data = data, let response = response as? HTTPURLResponse, (200..<300) ~= response.statusCode else {
-                print("Error: HTTP request failed")
+                print("Error: HTTP request failed", response as Any)
                 return
             }
             guard let output = try? JSONDecoder().decode(Places.self, from: data) else {
@@ -194,10 +206,9 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
             
             DispatchQueue.main.async {
                 // 거리에 따른 정렬
-                var array = output.result.place.list
-                array.sort { return Double($0.distance) ?? 0.0 < Double($1.distance) ?? 0.0 }
-                // 내 주변 20개 보여주기
-                let resultArray = Array(array[0...19])
+                var array = output.documents
+                // 내 주변 15개 보여주기
+                let resultArray = Array(array)
                 // 검사 결과에서 보여주기 위한 주변 정보 가져오기 추가
                 self.resultInfo = resultArray
                 self.total = resultArray.count >= 5 ? 5 : resultArray.count
@@ -209,7 +220,7 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
                     }
                 }
                 
-                // 위치 기준 새로운 마커 생성
+//                // 위치 기준 새로운 마커 생성
                 var markNumber: Int = -1 // 마커 식별자 테그
                 var placeIdx: Int = 0
                 resultArray.forEach { element in
@@ -222,18 +233,16 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
                     marker.width = 50
                     marker.height = 50
                     marker.mapView = self.view.mapView
-                    marker.touchHandler = { (overlay: NMFOverlay) -> Bool in
+                    marker.touchHandler = { [self] (overlay: NMFOverlay) -> Bool in
                         // 눌렀을때 정보 확인용 (디버깅)
-                        // print(resultArray[Int(marker.tag)])
+//                        print(resultArray[Int(marker.tag)])
                         placeIdx = Int(marker.tag)
-                        self.placeInfo[Key.name.rawValue] = resultArray[placeIdx].name
-                        self.placeInfo[Key.status.rawValue] = resultArray[placeIdx].businessStatus.status.text
-                        self.placeInfo[Key.statusDetail.rawValue] = resultArray[placeIdx].businessStatus.status.detailInfo
-                        self.placeInfo[Key.image.rawValue] = resultArray[placeIdx].thumUrls.first
-                        self.placeInfo[Key.reviewCount.rawValue] = String(resultArray[placeIdx].reviewCount)
-                        self.placeInfo[Key.placeReviewCount.rawValue] = String(resultArray[placeIdx].placeReviewCount)
-                        self.placeInfo[Key.address.rawValue] = resultArray[placeIdx].address
-                        self.placeInfo[Key.tel.rawValue] = resultArray[placeIdx].tel
+                        self.placeInfo[Key.name.rawValue] = resultArray[placeIdx].placeName
+                        self.placeInfo[Key.address.rawValue] = resultArray[placeIdx].addressName
+                        self.placeInfo[Key.roadAddress.rawValue] = resultArray[placeIdx].roadAddressName
+                        // 사용자 위치 기준 거리로 변환
+                        self.placeInfo[Key.distance.rawValue] = self.getMeter(lat1: userLocation.0, lon1: userLocation.1, lat2: Double(resultArray[placeIdx].y) ?? 1.0, lon2: Double(resultArray[placeIdx].x) ?? 1.0).convertMeter()
+                        self.placeInfo[Key.tel.rawValue] = resultArray[placeIdx].phone
                         self.placeInfo[Key.lat.rawValue] = resultArray[placeIdx].y
                         self.placeInfo[Key.lng.rawValue] = resultArray[placeIdx].x
                         withAnimation(.linear(duration: 0.25)) {
@@ -248,4 +257,21 @@ final class MapCoordinator: NSObject, ObservableObject, NMFMapViewCameraDelegate
             }
         }.resume()
     }
+    
+    func getMeter(lat1: Double, lon1: Double, lat2: Double, lon2: Double) -> String {
+        let deltaLon = abs(deg2rad(lon2) - deg2rad(lon1))
+        let deltaLat = abs(deg2rad(lat2) - deg2rad(lat1))
+        
+        let distance = acos(sin(deg2rad(lat1)) * sin(deg2rad(lat2)) + cos(deg2rad(lat1)) * cos(deg2rad(lat2)) * cos(deltaLon)) * 3963.189 // 마일
+        
+        let gap = Int(distance * 1609.344)
+        return String(gap)
+    }
+
+    func deg2rad(_ val: Double) -> Double {
+        let pi = Double.pi
+        let deRa = val * (pi / 180.0)
+        return deRa
+    }
+
 }

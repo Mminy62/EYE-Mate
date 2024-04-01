@@ -9,7 +9,7 @@ import SwiftUI
 
 //MARK: - 내 주변 병원 리스트 셀
 struct PlaceCellView: View {
-    var place: placeList
+    var place: PlaceList
     
     var body: some View {
         RoundedRectangle(cornerRadius: 10)
@@ -23,32 +23,33 @@ struct PlaceCellView: View {
             .overlay(
                 HStack {
                     VStack(alignment: .leading, spacing: 5) {
-                        Text(place.name)
+                        Text(place.placeName)
                             .font(.pretendardSemiBold_16)
                         HStack {
-                            Text(place.businessStatus.status.text)
-                                .font(.pretendardBold_12)
-                            Text(place.businessStatus.status.detailInfo)
+                            Text("주소")
+                                .font(.pretendardSemiBold_12)
+                            Text("\(place.addressName)")
                                 .font(.pretendardRegular_12)
                         }
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.lightRed)
-                            
-                            Text("방문자 리뷰 \(place.reviewCount)")
+                        HStack(spacing: 5) {
+                            Image(systemName: "phone")
+                                .foregroundStyle(Color.customGreen)
+                            Text(place.phone)
                                 .font(.pretendardRegular_12)
-                            Text("블로그 리뷰 \(place.placeReviewCount)")
-                                .font(.pretendardRegular_12)
+                            Image(systemName: "figure.walk")
+                                .foregroundStyle(Color.customGreen)
+                            Text(place.distance.convertMeter())
+                                .font(.pretendardBold_12)
                         }
                     }
                     Spacer()
                     Button(action: {
-                        showNaverMap(lat: Double(place.y) ?? 0.0, lng: Double(place.x) ?? 0.0, name: place.name)
+                        print(place.placeName)
+                        showNaverMap(lat: Double(place.y) ?? 0.0, lng: Double(place.x) ?? 0.0, name: place.placeName)
                     }, label: {
                         Label("길찾기", systemImage: "location")
                     })
-                    .buttonStyle(MapButtonStyle())
+                    .buttonStyle(MapButtonStyle(cornerRadiusValue: 10))
                 }
                 .padding(15)
             )
