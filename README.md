@@ -10,7 +10,7 @@
    - [프로젝트 아키텍처](#프로젝트-아키텍처)
    - [사용한 기술](#사용한-기술)
    - [사용한 라이브러리](#사용한-라이브러리)
-3. [프로젝트 파일 구조](#프로젝트-파일-구조)
+3. [트러블 슈팅](#트러블-슈팅)
 4. [팀원 소개](#팀원-소개)
 
 </br>
@@ -59,326 +59,326 @@ iOS: 16.0
 </div>
 
 ### 사용한 기술
-<hr>
-<details>
-  <summary>SwiftUI</summary>
-
-- 선언형, 자동화, 조합, 데이터 업데이트 및 최신화 4가지 원칙을 기반으로 설계되어 어디서든 더 적은 코드, 더 좋은 코드를 작성 가능
-</details>
-
-<details>
-  <summary>UIKit</summary>
-
-- ARKit, NaverMap, Lottie를 사용하는데에 있어서 호환성을 제공하기 위해 UIKit이 사용되었음
-- UIKit을 활용하여 선언적 UI 프레임워크인 SwiftUI에서 사용할 수 없는 코드나 기능을 구현하거나 기존에 개발된 UIKit 코드와 통합
-- 이를 통해 SwiftUI로 개발하면서도 UIKit의 강력한 기능과 생태계를 활용할 수 있었음
-</details>
-
-<details>
-  <summary>ARKit</summary>
-  
-  - iOS 애플리케이션에서 증강 현실(AR)을 구현하기 위한 기술.
-  - 사용자의 전면 카메라를 통해 사용자 얼굴까지의 거리를 측정하여 안구 관련 검사의 정확도를 높이는 데 사용
-  - 사용자의 왼쪽 눈, 오른쪽 눈의 변환 행렬을 얻어 이를 기반으로 눈까지의 거리를 계산
-</details>
-
-<details>
-  <summary>WebKit</summary>
-  
-  - Apple이 개발한 웹 렌더링 엔진으로, 앱 내에서 웹 콘텐츠를 표시하고 관리하는 데 사용
-  - 사용자가 눈 관련 상식을 편리하게 읽고 학습할 수 있도록 눈 관련 상식 기사 등을 로드하여 사용자에게 제공
-  - 눈 관련 상식 기사에는 시각적인 콘텐츠와 함께 제공되어 사용자의 이해를 돕고 흥미를 유발함
-</details>
-
-<details>
-  <summary>PhotosUI</summary>
-  
-  - 사용자의 사진 라이브러리에 액세스하여 ImagePicker 기능 수행을 위한 라이브러리
-  - 프로필 이미지 또는 게시물에 첨부할 이미지 선택
-</details>
-
-<details>
-  <summary>Charts</summary>
-  
-  - SwiftUI에서 그래프와 차트를 생성하고 표시하기 위한 라이브러리
-  - 데이터를 시각적으로 표현하여 눈 건강에 대한 추세를 쉽게 이해할 수 있고 변동을 한눈에 파악할 수 있어 분석과 판단을 용이하게 하며 더욱 흥미롭고 유익하게 만들 수 있음
-  - 사용자 시력 변화에 대한 추세를 차트로 표현하여 변화에 대한 추세를 더욱 흥미롭고 쉽게 파악 가능
-</details>
-
-<details>
-  <summary>CoreLocation</summary>
-  
-  - 애플리케이션에서 위치 기반 서비스를 활용하기 위한 기능을 제공하는 프레임워크
-  - 사용자의 현재 위치 정보를 가져오고, 지리적인 위치 정보를 사용하여 애플레케이션에서 위치 기반 서비스를 제공하는데 사용됨
-  - 내 주변 탭, 눈 검사 결과 화면에서 사용자 주변의 안과, 안경점 정보를 제공하기 위해 현재 사용자 위치를 파악하는데 사용
-</details>
+* SwiftUI
+* ARKit, WebKit
+* PhotosUI, Charts, CoreLocation
 
 ### 사용한 라이브러리
-<hr>
-<details>
-  <summary>AcknowList</summary>
+* AcknowList, FirebaseAuth, FirebaseFirestore. FirebaseStorage, FirebaseMessaging, Kingfisher, lottie-ios, NMapsMap, SlackKit
 
-- 앱에서 사용된 오픈 소스 라이브러리나 이미지 등의 자산에 대한 정보를 앱의 설정 또는 정보 섹션에 표시하기 위해 사용한 라이브러리
-- 오픈소스 라이선스 기능 구현
+## 트러블 슈팅
+<details>
+  <summary>Issue 1 :: CustomTabBar</summary>
+
+- Issue
+
+```swift
+struct CustomTabBarContainerView<Content: View>: View {
+    let content: Content
+    @EnvironmentObject var tabManager: TabManager
+    @State private var tabs: [TabBarItem] = [.home, .movement, .community, .eyeMap]
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            content
+            CustomTabBar(tabs: tabs, localSelection: tabManager.selection)
+        }
+        .onPreferenceChange(TabBarItemPreferenceKey.self, perform: { value in
+            self.tabs = tabs
+        })
+        .ignoresSafeArea(edges: .bottom)
+    }
+}
+```
+
+CustomTabBar 구현 시 VStack으로 Content를 구성하고 하단에 TabBar를 구성하기위해 바꿔보았지만, 
+
+ZStack으로는 정상적으로 구현되는 반면 VStack으로 하게되면 Content의 Height가 비정상적으로 길어지는 Issue가 있었습니다.
+
+- Problem
+
+ZStack과 VStack의 정의를 정확히 이해하지 못해 일어나는 문제였습니다.
+
+```swift
+// 기존 코드
+var body: some View {
+        NavigationStack {
+            CustomTabBarContainerView(selection: $tabSelection) {
+                HomeView(tabSelection: $tabSelection)
+                    .tabBarItem(tab: .home, selection: $tabSelection)
+                MovementView()
+                    .tabBarItem(tab: .movement, selection: $tabSelection)
+                CommunityView()
+                    .tabBarItem(tab: .community, selection: $tabSelection)
+                EyeMapView()
+                    .tabBarItem(tab: .eyeMap, selection: $tabSelection)
+            }
+            .accentColor(.customGreen)
+            .padding(0)
+        }
+    }
+```
+
+tabSelection으로 구분되어 보여지는 화면이 달라짐으로써 주어지는 Content가 한 개씩 주어진다고 착각하였습니다. 
+
+ZStack은 뷰가 겹쳐서 제공되어 Content 4개가 제공되더라도 밑에 깔려있으므로 정상적으로 출력되는 것이였고, VStack으로 바꾸게 될 시 클로저로 주어진 Content 4개의 모든 Height가 더해져 결국 Content의 길이가 길어지는 문제였습니다.
+
+- Solution
+
+```swift
+// 변경된 코드
+var body: some View {
+        VStack {
+            CustomTabBarContainerView() {
+                switch tabManager.selection {
+                case .home:
+                    HomeView()
+                        .tabBarItem(tab: .home, selection: $tabManager.selection)
+                case .movement:
+                    MovementView()
+                        .tabBarItem(tab: .movement, selection: $tabManager.selection)
+                case .community:
+                    CommunityView()
+                        .tabBarItem(tab: .community, selection: $tabManager.selection)
+                case .eyeMap:
+                    EyeMapView()
+                        .tabBarItem(tab: .eyeMap, selection: $tabManager.selection)
+                }
+            }
+        }
+    }
+```
+
+기존 selection을 EnvironmentObject로 변경하여 전역에서 관리할 수 있도록 변경하였고,
+
+해당 값이 변동될 때마다 Content를 Switch문으로 변경하여 주어지는 Content를 한 개로 고정하였습니다.
+
+이를 통해 기존 HomeView에서 selection을 변경하기위해 Binding했던 코드도 효율적으로 수정할 수 있었습니다.
+
 </details>
-<details>
-  <summary>FirebaseCore</summary>
 
-- Firebase Authentication, Firebase Firestore, Firebase Storage, Firebase Cloud Messaging과 같은 Firebase 서비스 모듈을 사용하기 위한 라이브러리
-</details>
 <details>
-  <summary>FirebaseAuth</summary>
+  <summary>Issue 2 :: 시력검사 측정거리 불일치</summary>
 
-- 사용자 인증을 구현하기 위해 사용한 라이브러리
-- 회원가입 및 로그인 기능 구현
-</details>
-<details>
-  <summary>FirebaseFirestore</summary>
+<img src="https://gist.github.com/user-attachments/assets/22f39a8a-274b-4e9f-ae5d-b9205cc63dcf" width="300">
 
-- 실시간 데이터를 저장, 동기화 및 쿼리하기 위해 사용한 라이브러리
-- 사용자의 데이터 관리
-</details>
-<details>
-  <summary>FirebaseStorage</summary>
+- Issue
 
-- 사용자가 업로드한 파일을 안전하게 저장하고 관리하기 위해 사용한 라이브러리
-- 프로필 이미지와 게시물 이미지 관리
-</details>
-<details>
-  <summary>FirebaseMessaging</summary>
+시력 검사에서 검사를 시작할 때 측정했던 측정거리가 검사 결과 화면에서 제대로 저장되지 않고 0CM 로 출력되는 Issue가 있었습니다.
 
-- 사용자에게 푸시 알림을 전송하기 위해 사용한 라이브러리
-- 푸시 알림 기능 구현
-</details>
-<details>
-  <summary>Kingfisher</summary>
+- Problem
 
-- 이미지 다운로드 및 캐싱을 담당하는 라이브러리
-- 이미지 관련 작업을 간편하게 처리하고 성능 최적화
-</details>
-<details>
-  <summary>lottie-ios</summary>
+다른 파일에서 구현된 코드였기 때문에 검사 시작 전 Instance와 결과 화면에서의 Instance가 달라 일어나는 문제였습니다.
 
-- 앱에 애니메이션을 추가하기 위해 사용한 라이브러리
-- 눈 운동 기능 구현
-</details>
-<details>
-  <summary>NMapsMap</summary>
+- Solution
 
-- 지도를 표시하고 사용자 위치를 표시하거나 추적, 마커를 추가하고 사용자 인터랙션을 처리하기 위한 라이브러리
-- 내 주변 안과 및 안경원 기능 구현
-</details>
-<details>
-  <summary>SlackKit</summary>
+해당 측정거리를 포함한 ViewModel을 싱글톤 패턴으로 변경하고 하나의 Instance만 생성되게 하여 문제를 해결하였습니다.
 
-- Slack 워크스페이스로 메시지를 보내기 위해 사용한 라이브러리
-- 고객센터, 게시판 신고 기능 구현
 </details>
 
-## 📂 프로젝트 파일 구조
 
 <details>
-  <summary>파일 트리</summary>
+  <summary>Issue 3 :: 프로필 사진 선택 시 4:3 이미지의 여백이 지워지지 않는 오류</summary>
+   
+### Issue
+
+프로필 사진이 회원가입, 설정에서 변경 시, profile image 크기가 200, 200 정도의 원인데 
+
+**4:3 비율의 이미지를 넣으면 원이 다 차지 않는다.(옆에 흰색 여백이 생긴다)**
+
+- 원의 양옆이 남음, 비율 유지때문인듯 싶다
+- aspactio를 안쓰고 scaledToFill을 써도 여전히 문제이다
+- frame 크기가 50, 50인 작은 원 이거나 1:1 이미지(정사각형 이미지)는 잘 됨
+
+### Solution
   
-```markdown
-📦EYE-Mate
- ┣ 📂Core
- ┃ ┣ 📜AppDelegate.swift
- ┃ ┣ 📜EYE_MateApp.swift
- ┃ ┗ 📜NotificationManager.swift
- ┣ 📂Extensions
- ┃ ┣ 📜Bundle+.swift
- ┃ ┣ 📜Color+.swift
- ┃ ┣ 📜Font+.swift
- ┃ ┣ 📜Image+.swift
- ┃ ┣ 📜String+.swift
- ┃ ┣ 📜UINavigationController+.swift
- ┃ ┗ 📜View+.swift
- ┣ 📂Models
- ┃ ┣ 📜CPData.swift
- ┃ ┣ 📜CountryNumbers.json
- ┃ ┣ 📜FAQ.swift
- ┃ ┣ 📜Places.swift
- ┃ ┣ 📜Post.swift
- ┃ ┣ 📜Router.swift
- ┃ ┣ 📜SettingModels.swift
- ┃ ┣ 📜TestModel.swift
- ┃ ┣ 📜User.swift
- ┣ 📂Resources
- ┃ ┣ 📂Fonts
- ┃ ┗ 📂Lottie
- ┣ 📂Views
- ┃ ┣ 📂Community
- ┃ ┃ ┣ 📂FAQ
- ┃ ┃ ┃ ┣ 📜FAQRowCellView.swift
- ┃ ┃ ┃ ┣ 📜FAQView.swift
- ┃ ┃ ┃ ┗ 📜FAQViewModel.swift
- ┃ ┃ ┣ 📂FreeBoard
- ┃ ┃ ┃ ┣ 📂CreateNewPost
- ┃ ┃ ┃ ┃ ┣ 📜CreateNewPostView.swift
- ┃ ┃ ┃ ┃ ┣ 📜CreateNewPostViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜ImagePickerView.swift
- ┃ ┃ ┃ ┃ ┗ 📜NewPostView.swift
- ┃ ┃ ┃ ┣ 📂Post
- ┃ ┃ ┃ ┃ ┣ 📜CommentRowCellView.swift
- ┃ ┃ ┃ ┃ ┣ 📜CommentView.swift
- ┃ ┃ ┃ ┃ ┣ 📜CommentViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜ExpandImageView.swift
- ┃ ┃ ┃ ┃ ┣ 📜ImageCardView.swift
- ┃ ┃ ┃ ┃ ┣ 📜PostContent.swift
- ┃ ┃ ┃ ┃ ┣ 📜PostView.swift
- ┃ ┃ ┃ ┃ ┣ 📜PostViewModel.swift
- ┃ ┃ ┃ ┃ ┗ 📜ReplyCommentRowCellView.swift
- ┃ ┃ ┃ ┣ 📜CommunitySearchBar.swift
- ┃ ┃ ┃ ┣ 📜FreeBoardView.swift
- ┃ ┃ ┃ ┣ 📜FreeBoardViewModel.swift
- ┃ ┃ ┃ ┣ 📜PostCardView.swift
- ┃ ┃ ┃ ┗ 📜ReusablePostsView.swift
- ┃ ┃ ┗ 📜CommunityView.swift
- ┃ ┣ 📂EyeMap
- ┃ ┃ ┣ 📜ActionAreaView.swift
- ┃ ┃ ┣ 📜AsyncImageView.swift
- ┃ ┃ ┣ 📜EyeMapView.swift
- ┃ ┃ ┣ 📜InfoView.swift
- ┃ ┃ ┣ 📜MapButtonStyle.swift
- ┃ ┃ ┣ 📜MapImageModifier.swift
- ┃ ┃ ┣ 📜MapModalView.swift
- ┃ ┃ ┣ 📜MapTabBarView.swift
- ┃ ┃ ┣ 📜MapView.swift
- ┃ ┃ ┗ 📜MapViewModel.swift
- ┃ ┣ 📂Home
- ┃ ┃ ┣ 📂EyeSense
- ┃ ┃ ┃ ┣ 📜EyeSenseOnBoardingViewModel.swift
- ┃ ┃ ┃ ┣ 📜EyeSenseOnboardingView.swift
- ┃ ┃ ┃ ┣ 📜EyeSenseView.swift
- ┃ ┃ ┃ ┣ 📜OffsetKey.swift
- ┃ ┃ ┃ ┗ 📜PageControl.swift
- ┃ ┃ ┣ 📂Menu
- ┃ ┃ ┃ ┣ 📜HomeViewCellView.swift
- ┃ ┃ ┃ ┗ 📜MenuModel.swift
- ┃ ┃ ┣ 📂Record
- ┃ ┃ ┃ ┣ 📂AddRecord
- ┃ ┃ ┃ ┃ ┣ 📜AddRecordHeader.swift
- ┃ ┃ ┃ ┃ ┣ 📜AddRecordSubtitleView.swift
- ┃ ┃ ┃ ┃ ┣ 📜AddRecordView.swift
- ┃ ┃ ┃ ┃ ┣ 📜CheckBoxButton.swift
- ┃ ┃ ┃ ┃ ┣ 📜CustomMenu.swift
- ┃ ┃ ┃ ┃ ┣ 📜CustomMenuButton.swift
- ┃ ┃ ┃ ┃ ┣ 📜CustomSlider.swift
- ┃ ┃ ┃ ┃ ┣ 📜EyeStatusButtonGroup.swift
- ┃ ┃ ┃ ┃ ┣ 📜EyewareButtonGroup.swift
- ┃ ┃ ┃ ┃ ┣ 📜PlaceButtonGroup.swift
- ┃ ┃ ┃ ┃ ┣ 📜RadioButton.swift
- ┃ ┃ ┃ ┃ ┣ 📜SurgeryButtonGroup.swift
- ┃ ┃ ┃ ┃ ┣ 📜TestTypeButtonGroup.swift
- ┃ ┃ ┃ ┃ ┗ 📜VisionSlider.swift
- ┃ ┃ ┃ ┣ 📂AllRecord
- ┃ ┃ ┃ ┃ ┣ 📜AllRecordHeader.swift
- ┃ ┃ ┃ ┃ ┗ 📜AllRecordView.swift
- ┃ ┃ ┃ ┣ 📜ColoredText.swift
- ┃ ┃ ┃ ┣ 📜EmptyVisionChart.swift
- ┃ ┃ ┃ ┣ 📜RecordBox.swift
- ┃ ┃ ┃ ┣ 📜RecordView.swift
- ┃ ┃ ┃ ┣ 📜RecordViewModel.swift
- ┃ ┃ ┃ ┗ 📜VisionChart.swift
- ┃ ┃ ┣ 📂TestViews
- ┃ ┃ ┃ ┣ 📂Astigmatism
- ┃ ┃ ┃ ┃ ┣ 📜AstigmatismTestView.swift
- ┃ ┃ ┃ ┃ ┣ 📜AstigmatismTestViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜AstigmatismView.swift
- ┃ ┃ ┃ ┃ ┗ 📜AstigmatismViewModel.swift
- ┃ ┃ ┃ ┣ 📂Color
- ┃ ┃ ┃ ┃ ┣ 📜ColorTestView.swift
- ┃ ┃ ┃ ┃ ┣ 📜ColorTestViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜ColorView.swift
- ┃ ┃ ┃ ┃ ┗ 📜ColorViewModel.swift
- ┃ ┃ ┃ ┣ 📂Common
- ┃ ┃ ┃ ┃ ┣ 📜BackgroundView.swift
- ┃ ┃ ┃ ┃ ┣ 📜ExplanationTextView.swift
- ┃ ┃ ┃ ┃ ┣ 📜PlaceCellView.swift
- ┃ ┃ ┃ ┃ ┣ 📜TestAlertView.swift
- ┃ ┃ ┃ ┃ ┣ 📜TestOnboardingView.swift
- ┃ ┃ ┃ ┃ ┣ 📜TestResultTitleView.swift
- ┃ ┃ ┃ ┃ ┣ 📜TestType.swift
- ┃ ┃ ┃ ┃ ┗ 📜WarningText.swift
- ┃ ┃ ┃ ┣ 📂Distance
- ┃ ┃ ┃ ┃ ┣ 📜DistanceConditionView.swift
- ┃ ┃ ┃ ┃ ┣ 📜DistanceConditionViewModel.swift
- ┃ ┃ ┃ ┃ ┗ 📜DistanceFaceAndDevice.swift
- ┃ ┃ ┃ ┣ 📂Sight
- ┃ ┃ ┃ ┃ ┣ 📜SightTestView.swift
- ┃ ┃ ┃ ┃ ┣ 📜SightTestViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜SightView.swift
- ┃ ┃ ┃ ┃ ┗ 📜SightViewModel.swift
- ┃ ┃ ┃ ┗ 📂Vision
- ┃ ┃ ┃ ┃ ┣ 📜VisionTestView.swift
- ┃ ┃ ┃ ┃ ┣ 📜VisionTestViewModel.swift
- ┃ ┃ ┃ ┃ ┣ 📜VisionView.swift
- ┃ ┃ ┃ ┃ ┗ 📜VisionViewModel.swift
- ┃ ┃ ┣ 📜HomeView.swift
- ┃ ┃ ┗ 📜HomeViewModel.swift
- ┃ ┣ 📂Login
- ┃ ┃ ┣ 📜LoginView.swift
- ┃ ┃ ┣ 📜LoginViewModel.swift
- ┃ ┃ ┣ 📜OTPVerificationView.swift
- ┃ ┃ ┣ 📜PhoneNumberView.swift
- ┃ ┃ ┣ 📜SignInView.swift
- ┃ ┃ ┣ 📜SignUpProfileView.swift
- ┃ ┃ ┗ 📜SignUpView.swift
- ┃ ┣ 📂Movement
- ┃ ┃ ┣ 📂MovementLottie
- ┃ ┃ ┃ ┗ 📜MovementLottieView.swift
- ┃ ┃ ┣ 📂Toast
- ┃ ┃ ┃ ┣ 📜Toast.swift
- ┃ ┃ ┃ ┣ 📜ToastModifier.swift
- ┃ ┃ ┃ ┗ 📜ToastView.swift
- ┃ ┃ ┣ 📜HorizontalDivider.swift
- ┃ ┃ ┣ 📜MovementView.swift
- ┃ ┃ ┣ 📜MovementViewModel.swift
- ┃ ┃ ┗ 📜StartMovementRow.swift
- ┃ ┣ 📂Profile
- ┃ ┃ ┣ 📜EditableProfileView.swift
- ┃ ┃ ┣ 📜ProfileNameTextField.swift
- ┃ ┃ ┣ 📜ProfileView.swift
- ┃ ┃ ┗ 📜ProfileViewModel.swift
- ┃ ┣ 📂Setting
- ┃ ┃ ┣ 📂Account
- ┃ ┃ ┃ ┣ 📜AccountDeleteView.swift
- ┃ ┃ ┃ ┣ 📜AccountDeleteViewModel.swift
- ┃ ┃ ┃ ┗ 📜DeleteAlertView.swift
- ┃ ┃ ┣ 📂AppManage
- ┃ ┃ ┃ ┣ 📜CSViewModel.swift
- ┃ ┃ ┃ ┣ 📜CustomerServiceView.swift
- ┃ ┃ ┃ ┗ 📜LicenseView.swift
- ┃ ┃ ┣ 📂Profile
- ┃ ┃ ┃ ┣ 📜ChangeUserNameView.swift
- ┃ ┃ ┃ ┣ 📜ImageActionSheetView.swift
- ┃ ┃ ┃ ┗ 📜ProfileListView.swift
- ┃ ┃ ┣ 📜MyPostsView.swift
- ┃ ┃ ┣ 📜ScrapPostsView.swift
- ┃ ┃ ┣ 📜SettingListDivider.swift
- ┃ ┃ ┣ 📜SettingListView.swift
- ┃ ┃ ┣ 📜SettingNavigationTitle.swift
- ┃ ┃ ┣ 📜SettingTitleModifier.swift
- ┃ ┃ ┗ 📜SettingView.swift
- ┃ ┣ 📂Styles
- ┃ ┃ ┣ 📜CustomAlertView.swift
- ┃ ┃ ┣ 📜CustomBackButton.swift
- ┃ ┃ ┣ 📜CustomButton.swift
- ┃ ┃ ┣ 📜CustomNavigationTitle.swift
- ┃ ┃ ┣ 📜CustomTabBar.swift
- ┃ ┃ ┣ 📜CustomTabPage.swift
- ┃ ┃ ┣ 📜HapticManager.swift
- ┃ ┃ ┗ 📜TabBarItem.swift
- ┃ ┣ 📜LoadingView.swift
- ┃ ┣ 📜MainView.swift
- ┃ ┗ 📜WrappingHStack.swift 
- ┃
- ┣ 📜APIKEY.plist
- ┣ 📜EYE-Mate.entitlements
- ┣ 📜GoogleService-Info.plist
- ┣ 📜Info.plist
- ┗ 📜Pods-EYE-Mate-acknowledgements.plist
+- `scaledToFill()`
+   - 비율을 유지하면서 상위 뷰의 크기를 다 채우는 함수
+ 
+   - <img width="300" alt="스크린샷 2024-03-11 오전 12 11 53" src="https://gist.github.com/user-attachments/assets/576e4cb3-7636-4042-9a1b-1b6baf310ce2">
+
+- `aspectRatio(contentMode: .fill)`
+   - 지정된 크기의 뷰에 맞게 비율을 맞춘다
+   - 이 예에서 보라색 타원은 가로와 세로의 비율이 3:4이며 프레임을 채우도록 크기가 조정됩니다:
+   - <img width="300" alt="스크린샷 2024-03-11 오전 12 14 30" src="https://gist.github.com/user-attachments/assets/51de629a-42b1-4ff2-bf71-51b8837720ce">
+    
+
+```swift
+# 위와 같은 이유로 aspectRatio를 사용하여 4:3 이미지의 비율 유지를 없앴다
+extension Image {
+    func ProfileImageModifier() -> some View {
+        self
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+    }
+}
+```
+</details>
+<details>
+  <summary>Issue 4 :: 프로필 사진 변경 후 이미지 반영 시간 단축</summary>
+
+- Issue
+    - 프로필 이미지를 Firebase storage에 저장하고 있는 상태
+    - 이미지는 각 메뉴의 상단에 노출되며, storage의 download url을 @UserDefaults 값으로 갖고 있는 상태
+    - 프로필 사진 변경 과정: storage 사진 변경 → download url 에서 다운받아 가져옴
+    
+    ⇒ download url 에서 이미지를 받아오는 과정에서 시간이 걸린다
+    
+
+- Solution
+
+1) Kingfisher 외부 라이브러리를 사용하여 이미지 다운 시간을 단축시켰다
+
+2) 로컬 캐시처럼 Image 변수를 만들어 다운 받지 않고, 바로 변경시킨 후 뒤에선 storage를 업데이트 하는 방식으로 진행한다.
+
+- UserDefaults는 기본 데이터형만 저장할 수 있으므로 string인 url을 저장하는 것이 최선이다.<br>
+그러므로 앱을 처음 시작할 때만, url & kingfisher를 이용해 이미지를 다운받고, 이후 앱을 켠 상태로는 image 변수를 저장/변경 하는 것처럼 이용한다.
+
+<img width="300" alt="스크린샷 2024-03-11 오전 1 59 33" src="https://gist.github.com/user-attachments/assets/be35e05d-81a5-496b-ae51-4e1c4f22231c"/>
+
+<img width="300" alt="스크린샷 2024-03-11 오전 1 59 59" src="https://gist.github.com/user-attachments/assets/42224a76-dec5-4ae0-b53d-c5d5c30a493f"/>
+
+</details>
+
+<details>
+  <summary>Issue 5 :: 화면 이동 처리 Router 로직 미반영</summary>
+
+- Issue
+    - 화면 이동에 대한 책임을 분리시켰으나 라우팅 로직이 누락된 부분이 존재해 목적지 화면으로 올바른 이동이되지 않는다.
+    
+- Solution
+    - OTPVerificationView 파일 `로그인 화면인 경우`의 if문 scrope에 누락된 라우팅 로직 추가
+ ```swift
+// 로그인 화면인 경우
+else {
+	let isRegistered = try await loginViewModel.checkLoginAndSettingInfo()
+	// 가입한 이력이 있는 경우
+	if isRegistered {
+		loggedIn = true
+		isDisplaySignUpText = false
+			if loginViewModel.showFullScreenCover {
+			loginViewModel.showFullScreenCover.toggle()
+			} else {
+				router.navigateBack()
+			}
+	}
+	// 가입한 이력이 없는 경우
+	else {
+		loggedIn = false
+		isDisplaySignUpText = true
+		errorText = SignUpErrorText.signup.rawValue
+	}
+}
+```
+</details>
+
+<details>
+  <summary>Issue 6 :: 닉네임, 프로필 이미지 변경사항 게시물, 댓글에 미반영</summary>
+- Issue
+    - 문제 식별
+        - 사용자가 닉네임 또는 프로필 이미지를 변경시 게시물, 댓글에 변경 이전의 Data가 담겨있는 문제 발생
+    - 원인 분석
+        - DB의 User Document를 기준으로 사용자의 정보를 가져오는 것이 아닌 게시물 또는 댓글 작성시 현재 사용자의 정보를 Post Document에 적재하기 때문에 사용자 정보 수정시 해당 사용자의 모든 게시물과 댓글에 적재된 정보를 업데이트 해주지 않는이상 변경된 정보가 반영되지 않는다.
+    - 해결 방법
+        - 사용자의 정보가 수정될 때마다 해당되는 모든 게시물과 댓글의 Data를 업데이트 해줄 수도 있겠지만 매우 비효율적이기 때문에 Post Document에 직접 사용자의 정보를 적재하는 것이 아닌
+        userUID만 적재하고 게시물을 읽어올 때 User Document로부터 최신 정보를 읽어와 효율적으로 처리
+
+- Solution
+
+`FreeboardViewModel.swift`
+```swift
+/// - 게시물 Fetch
+    func fetchPosts() async {
+        do {
+            var query: Query!
+            
+            // MARK: 게시물 Pagination
+            if let paginationDoc {
+                query = Firestore.firestore().collection("Posts")
+                    .order(by: "publishedDate", descending: true)
+                    .start(afterDocument: paginationDoc)
+                    .limit(to: 20)
+            } else {
+                query = Firestore.firestore().collection("Posts")
+                    .order(by: "publishedDate", descending: true)
+                    .limit(to: 20)
+            }
+            
+            let docs = try await query.getDocuments()
+            let fetchedPosts = try await docs.documents.asyncMap{ doc -> Post? in
+                var post = try? doc.data(as: Post.self)
+                
+                // userName 업데이트
+                if let userUID = post?.userUID, !userUID.isEmpty {
+                    let postUser = try await Firestore.firestore().collection("Users").document(userUID).getDocument(as: User.self)
+                    post?.userName = postUser.userName
+                    post?.userImageURL = postUser.userImageURL!
+                }
+                
+                // Comment 가져오기
+                guard let postID = post?.id else { return nil }
+                let commentsQuerySnapshot = try await Firestore.firestore()
+                    .collection("Posts")
+                    .document(postID)
+                    .collection("Comments")
+                    .order(by: "publishedDate", descending: false)
+                    .getDocuments()
+                
+                post?.comments = try await commentsQuerySnapshot.documents.asyncMap{ commentDoc -> Comment? in
+                    var comment = try? commentDoc.data(as: Comment.self)
+                    
+                    // 댓글 userName 업데이트
+                    if let commentUserUID = comment?.userUID, !commentUserUID.isEmpty {
+                        let commentUser = try await Firestore.firestore().collection("Users").document(commentUserUID).getDocument(as: User.self)
+                        comment?.userName = commentUser.userName
+                        comment?.userImageURL = commentUser.userImageURL!
+                    }
+                    
+                    // 댓글의 대댓글 가져오기
+                    let replyCommentsQuerySnapshot = try await Firestore.firestore()
+                        .collection("Posts")
+                        .document(postID)
+                        .collection("Comments")
+                        .document(commentDoc.documentID)
+                        .collection("ReplyComments")
+                        .order(by: "publishedDate", descending: false)
+                        .getDocuments()
+                    
+                    comment?.replyComments = try await replyCommentsQuerySnapshot.documents.asyncMap{ replyDoc -> ReplyComment? in
+                        var replyComment = try? replyDoc.data(as: ReplyComment.self)
+                        
+                        // 대댓글 userName 업데이트
+                        if let replyCommentUserUID = replyComment?.userUID, !replyCommentUserUID.isEmpty {
+                            let replyCommentUser = try await Firestore.firestore().collection("Users").document(replyCommentUserUID).getDocument(as: User.self)
+                            replyComment?.userName = replyCommentUser.userName
+                            replyComment?.userImageURL = replyCommentUser.userImageURL!
+                        }
+                        
+                        return replyComment
+                    }.compactMap{ $0 }
+                    
+                    return comment
+                }.compactMap{ $0 }
+                
+                return post
+            }.compactMap{ $0 }
+            
+            await MainActor.run {
+                posts.append(contentsOf: fetchedPosts)
+                
+                // Pagination에 사용하기 위해 마지막에 가져온 Document를 저장
+                paginationDoc = docs.documents.last
+                isFetching = false
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
 ```
 </details>
 
