@@ -164,7 +164,7 @@ var body: some View {
 <details>
   <summary>Issue 2 :: 시력검사 측정거리 불일치</summary>
 
-<img src="https://gist.github.com/user-attachments/assets/22f39a8a-274b-4e9f-ae5d-b9205cc63dcf" width="300">
+<img src="readme-asset/issue2.png" width="300">
 
 - Issue
 
@@ -199,12 +199,12 @@ var body: some View {
 - `scaledToFill()`
    - 비율을 유지하면서 상위 뷰의 크기를 다 채우는 함수
  
-   - <img width="300" alt="스크린샷 2024-03-11 오전 12 11 53" src="https://gist.github.com/user-attachments/assets/576e4cb3-7636-4042-9a1b-1b6baf310ce2">
+   - <img width="300" alt="issue3-1" src="readme-asset/issue3-1.png">
 
 - `aspectRatio(contentMode: .fill)`
    - 지정된 크기의 뷰에 맞게 비율을 맞춘다
    - 이 예에서 보라색 타원은 가로와 세로의 비율이 3:4이며 프레임을 채우도록 크기가 조정됩니다:
-   - <img width="300" alt="스크린샷 2024-03-11 오전 12 14 30" src="https://gist.github.com/user-attachments/assets/51de629a-42b1-4ff2-bf71-51b8837720ce">
+   - <img width="300" alt="issue3-2" src="readme-asset/issue3-1.png">
     
 
 ```swift
@@ -239,9 +239,8 @@ extension Image {
 - UserDefaults는 기본 데이터형만 저장할 수 있으므로 string인 url을 저장하는 것이 최선이다.<br>
 그러므로 앱을 처음 시작할 때만, url & kingfisher를 이용해 이미지를 다운받고, 이후 앱을 켠 상태로는 image 변수를 저장/변경 하는 것처럼 이용한다.
 
-<img width="300" alt="스크린샷 2024-03-11 오전 1 59 33" src="https://gist.github.com/user-attachments/assets/be35e05d-81a5-496b-ae51-4e1c4f22231c"/>
-
-<img width="300" alt="스크린샷 2024-03-11 오전 1 59 59" src="https://gist.github.com/user-attachments/assets/42224a76-dec5-4ae0-b53d-c5d5c30a493f"/>
+<img width="300" alt="issue4-1" src="readme-asset/issue4-1.png">
+<img width="300" alt="issue4-2" src="readme-asset/issue4-2.png">
 
 </details>
 
